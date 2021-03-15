@@ -35,7 +35,7 @@
                         <div class="col-md-2" style="margin-left: -5%;">
                           <div class="form-group">
                             <label class="text-center" style="font-size: 12px">Sampai Ayat</label>
-                            <select id="finish_ayat_selection" class="form-control text-center" style="width: 50px; font-size: 16px;"></select>
+                            <select id="end_ayat_selection" class="form-control text-center" style="width: 50px; font-size: 16px;"></select>
                           </div>
                         </div>
 
@@ -57,17 +57,13 @@
               <div class="card">
                 <div class="card-header">
                   <div>
-                    <button id="ulangi" type="button" rel="tooltip" class="btn btn-primary btn-round" style="margin-top: -6.3%; margin-bottom: 1%; margin-left: 80%; display: none;">
+                    <button id="ulangi" type="button" rel="tooltip" class="btn btn-primary btn-round" style="margin-top: 0%; margin-bottom: 1%; margin-left: 85%; display: none;">
                       <i class="material-icons">cached</i> Ulangi</button>
                   </div>
                 </div>
-                <div style="margin-right: 5%; margin-top: -3%; margin-bottom: 5%;">
+                <div style="margin-right: 5%; margin-top: 0%; margin-bottom: 5%;">
                     <p class="target" dir="rtl" style="color:#2e4053; font-size:16px;" align="right"></p>
-                    <p class="target" dir="rtl" lang="ar" style="color:#2e4053; font-size:35px; line-height:2;" align="right"></p>
-                </div>
-                <div style="margin-right: 5%; margin-top: -1%; margin-bottom: 5%;">
-                    <p class="prediction" dir="rtl" style="color:#2e4053; font-size:16px;" align="right"></p>
-                    <p class="prediction" dir="rtl" lang="ar" style="color:#2e4053; font-size:35px; line-height:2;" align="right"></p>
+                    <p class="target" dir="rtl" lang="ar" style="color:#2e4053; font-size:26px; line-height:2;" align="right"></p>
                 </div>
               </div>
             </div>
@@ -121,13 +117,13 @@ function set_start_ayat() {
         start.appendChild(newopt);
     } 
 };
-function set_finish_ayat() {
+function set_end_ayat() {
     // reset DOM
-    let element = document.getElementById("finish_ayat_selection");
+    let element = document.getElementById("end_ayat_selection");
     while (element.firstChild) {
       element.removeChild(element.firstChild);
     };
-    var start = document.getElementById('finish_ayat_selection');
+    var start = document.getElementById('end_ayat_selection');
     no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
     start_ayat = document.getElementById("start_ayat_selection").value;
     for ( i=start_ayat; i<=max_ayat[no_surat-1]; i++ ) {
@@ -143,38 +139,38 @@ function set_finish_ayat() {
 document.getElementById("surat_selection").value = list_nama_surat[0];
 set_start_ayat();
 document.getElementById("start_ayat_selection").value = 1;
-set_finish_ayat();
+set_end_ayat();
 
 // reset results
 function reset() {
     no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
     start_ayat = document.getElementById("start_ayat_selection").value;
-    finish_ayat = document.getElementById("finish_ayat_selection").value;
-    // document.getElementsByClassName('prediction')[0].innerHTML = "";
-    // document.getElementsByClassName('prediction')[1].innerHTML = "";
-    // document.getElementsByClassName('target')[0].innerHTML = "";
-    // document.getElementsByClassName('target')[1].innerHTML = "";
+    end_ayat = document.getElementById("end_ayat_selection").value;
+    document.getElementsByClassName('target')[0].innerHTML = "";
+    document.getElementsByClassName('target')[1].innerHTML = "";
     // show "ULANGI" button
-    // document.getElementById("ulangi").style.display = "none"
+    document.getElementById("ulangi").style.display = "none"
 }
-// $( "#ulangi" ).click(function() {
-//     reset();
-// });
+$( "#ulangi" ).click(function() {
+    reset();
+});
 
 // get ayat based on the chosen values
 $( "#surat_selection" ).change(function() {
     reset();
     set_start_ayat();
-    set_finish_ayat();
-    // no_surat = parseInt(ret[0]);
+    set_end_ayat();
     document.getElementById("surat_selection").value = list_nama_surat[no_surat-1];
     document.getElementById("start_ayat_selection").value = 1;
-    document.getElementById("finish_ayat_selection").value = 1;
+    document.getElementById("end_ayat_selection").value = 1;
 });
 $( "#start_ayat_selection" ).change(function() {
     reset();
-    set_finish_ayat();
-    document.getElementById("finish_ayat_selection").value = document.getElementById("start_ayat_selection").value;
+    set_end_ayat();
+    document.getElementById("end_ayat_selection").value = document.getElementById("start_ayat_selection").value;
+});
+$( "#end_ayat_selection" ).change(function() {
+    reset();
 });
 
 // upload function using ajax
@@ -189,32 +185,34 @@ function upload(blob) {
       contentType: false,
       processData: false,
       success: function(data) {
-        no_surat = document.getElementById("surat_selection").value.split('.')[0];
-        start_ayat = document.getElementById("start_ayat_selection").value;
-        finish_ayat = document.getElementById("finish_ayat_selection").value;
+        var no_surat = document.getElementById("surat_selection").value.split('.')[0];
+        var start_ayat = document.getElementById("start_ayat_selection").value;
+        var end_ayat = document.getElementById("end_ayat_selection").value;
 
         // highlight missing words in target ayats
-        text_target = '';
-        var k = 0;
-        for ( ayat=start_ayat; ayat<=finish_ayat; ayat++ ) {
+        var text_target = '';
+        var tmp = data.prediction;
+        var k = 1;
+        for ( ayat=start_ayat; ayat<=end_ayat; ayat++ ) {
             target = quran_dict[no_surat + '_' + ayat];
             for ( i=0; i<target.length; i++ ) {
-                if (data.prediction[k].includes(target[i])) {
+                if (tmp.includes(target[i])) {
                     text_target += target[i] + " ";
+                    idx = tmp.indexOf(target[i]);
+                    tmp.splice(idx, 1);
                 }
                 else {
                     text_target += "<span style='background-color: #FFFF00;'>" + target[i] + "</span>" + " ";
                 }                
             }
-            target += ' <br> ';
+            text_target += '(' + k + ') <br> ';
             k += 1;
         }
-  
         // show results
         document.getElementsByClassName('target')[0].innerHTML = "<strong>Bacaan Seharusnya</strong> <br> (<strong><span style='background-color: #FFFF00'>kuning</span></strong> mengindikasikan kata yang tidak terbaca)";
         document.getElementsByClassName('target')[1].innerHTML = text_target;
         // show "ULANGI" button
-        // document.getElementById("ulangi").style.display = "block"
+        document.getElementById("ulangi").style.display = "block"
         }
     });
 } 
