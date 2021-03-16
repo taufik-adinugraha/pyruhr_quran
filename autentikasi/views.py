@@ -79,7 +79,7 @@ def profile(request):
         db.profile.kabupaten_kota = request.POST['kabupaten_kota']
         db.profile.provinsi = request.POST['provinsi']
         db.save()
-    db = User.objects.get(username=request.user)
+        db = User.objects.get(username=request.POST['username'])
     data = {
         'username': db.username,
         'email': db.email,

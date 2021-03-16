@@ -20,7 +20,7 @@
           <div class="card-footer">
             <div class="stats">
               <i class="material-icons text-warning">switch_account</i>
-              <a href="{% url 'register' %}">Daftar</a>
+              <a href="{% url 'profile' %}">Username: {{ request.user.username }}</a>
             </div>
           </div>
         </div>
@@ -75,60 +75,29 @@
       </div>
     </div>
 
-<!--     CHART -->
-<!--     <div class="row">
+<!-- CHART -->
+    <div class="row">
       <div class="col-md-4">
         <div class="card card-chart">
-          <div class="card-header card-header-success">
-            <div class="ct-chart" id="dailySalesChart"></div>
-          </div>
-          <div class="card-body">
-            <h4 class="card-title">Daily Sales</h4>
-            <p class="card-category">
-              <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons">access_time</i> updated 4 minutes ago
+          <div class="card-header card-header-secondary">
+            <div id="canvas-holder" style="margin-top: 3%; margin-left: -70%; width:239%;">
+              <canvas id="chart-area-gender"></canvas>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-8">
         <div class="card card-chart">
-          <div class="card-header card-header-warning">
-            <div class="ct-chart" id="websiteViewsChart"></div>
-          </div>
-          <div class="card-body">
-            <h4 class="card-title">Email Subscriptions</h4>
-            <p class="card-category">Last Campaign Performance</p>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons">access_time</i> campaign sent 2 days ago
+          <div class="card-header card-header-secondary">
+            <div id="canvas-holder" style="margin-top: 3%;">
+              <canvas id="chart-area-juz"></canvas>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card card-chart">
-          <div class="card-header card-header-danger">
-            <div class="ct-chart" id="completedTasksChart"></div>
-          </div>
-          <div class="card-body">
-            <h4 class="card-title">Completed Tasks</h4>
-            <p class="card-category">Last Campaign Performance</p>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons">access_time</i> campaign sent 2 days ago
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> -->
+    </div>
 
-
+<!-- TABLE -->
     <div class="row">
       <div class="col-lg-6 col-md-12">
         <div class="card">
@@ -140,8 +109,8 @@
               <thead class="text-info">
                 <th>username</th>
                 <th>lembaga</th>
-                <th>ayat</th>
-                <th>surat</th>
+                <th>total ayat</th>
+                <th>total surat</th>
               </thead>
               <tbody>
               {% for e in top5_user %}
@@ -167,8 +136,8 @@
               <thead class="text-success">
                 <th>lembaga</th>
                 <th>kontributor</th>
-                <th>ayat</th>
-                <th>surat</th>
+                <th>total ayat</th>
+                <th>total surat</th>
               </thead>
               <tbody>
                 {% for e in lembaga %}
@@ -190,13 +159,65 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+<script>
+// draw charts
+console.log({{ recorded_juz }})
+$(document).ready(function() {
+  var config_gender = {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [{{ gender.P }}, {{ gender.L }}],
+        backgroundColor: ['#FFBF00', '#6495ED'],
+      }],
+      labels: ['Perempuan', 'Laki-laki']
+    },
+    options: {
+      responsive: true,
+      legend: {
+        position: 'top',
+      },
+      // title: {
+      //  display: true,
+      //  text: 'Chart.js Doughnut Chart'
+      // },
+      animation: {
+        animateScale: true,
+        animateRotate: true
+      }
+    }
+  };
 
-  <script>
-    $(document).ready(function() {
-      // Javascript method's body can be found in assets/demo/demo.js
-      md.initDashboardPageCharts();
+  var config_juzz = {
+    type: 'bar',
+    data: {
+      datasets: [{
+        data: {{ recorded_juz }},
+        backgroundColor: 'rgba(64, 224, 208, 0.7)',
+        borderColor: 'rgba(64, 224, 208)',
+        borderWidth: 2,
+      }],
+      labels: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],
+    },
+    options: {
+      responsive: true,
+      legend: {
+        display: false,
+      },
+      title: {
+       display: true,
+       text: 'Jumlah Ayat Per Juz'
+      },
+      animation: {
+        animateScale: true,
+      }
+    }
+  };
 
-    });
-  </script>
-
+  ctx_gender = document.getElementById('chart-area-gender').getContext('2d');
+    var ctx_juzz = document.getElementById('chart-area-juz').getContext('2d');
+    window.gender = new Chart(ctx_gender, config_gender);
+    window.juzz = new Chart(ctx_juzz, config_juzz);
+});
+</script>
 {% endblock javascripts %}

@@ -22,6 +22,7 @@ try:
     list_nama_surat_arab = [i.nama_surat_arab for i in data_surat.objects.all()]
     max_ayat = [i.jumlah_ayat for i in data_surat.objects.all()]
     arti = {f'{i.no_surat}_{i.no_ayat}':i.terjemah for i in terjemah.objects.all()}
+    info_juz = pd.read_csv('data/info_juz.csv')
 except:
     pass
 
@@ -122,7 +123,8 @@ def upload(request):
             c.save()
         except:
             # new entry
-            b.rekaman_set.create(no_surat=data[0], no_ayat=data[1], ukuran=size, filepath=filePath)
+            juz = info_juz[(info_juz['no_surat']==int(data[0])) & (info_juz['no_ayat']==int(data[1]))]['juz'].values[0]
+            b.rekaman_set.create(no_surat=data[0], no_ayat=data[1], juz=juz ,ukuran=size, filepath=filePath)
         return redirect('history', 'surat_ayat')
 
 
