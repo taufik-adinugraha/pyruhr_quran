@@ -84,11 +84,11 @@ function upload(blob) {
         }
         document.getElementById('similar').innerHTML = "";
         // get response data
-        result = JSON.parse(data.result);
+        var result = JSON.parse(data.result);
         var list_nama_surat = JSON.parse(data.list_nama_surat);
         var terjemah = JSON.parse(data.arti);
-        ayat = Object.keys(result);
-        Nayat = Object.keys(result).length;
+        var ayat = Object.keys(result);
+        var Nayat = Object.keys(result).length;
         // if similar ayats are found
         document.getElementById('prediction').innerHTML = data.prediction;
         if (Nayat > 1) {

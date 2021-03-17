@@ -4,7 +4,9 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .models import rekaman, data_surat, terjemah
 from django.contrib.auth.models import User
 from django.db.models import Sum
@@ -110,7 +112,7 @@ def upload(request):
             file.write(request.body)
         data = request.headers['info'].split('_')
         b = User.objects.get(id=request.user.id)
-        size = os.path.getsize(filePath)//1000
+        size = os.path.getsize(filePath)
         try:
             # if data for particular "surat" & "ayat" already exist
             c = b.rekaman_set.get(no_surat=data[0], no_ayat=data[1])
@@ -128,6 +130,15 @@ def upload(request):
         return redirect('history', 'surat_ayat')
 
 
-
+@api_view(['GET'])
+def metadata_rekaman(request):
+    # build dataframe from database
+    df_ayat = pd.DataFrame(list(rekaman.objects.all().values()))
+    df_user = pd.DataFrame(list(User.objects.all().values('id', 'username')))
+    df_user =  df_user[df_user['username']!='admin']
+    # merge df_user & df_ayat
+    df = df_user.merge(df_ayat.drop(['id'], axis=1), how='left', left_on='id', right_on='user_id')
+    df.drop(['user_id'], axis=1, inplace=True)
+    return JsonResponse(df.to_dict())
 
 
