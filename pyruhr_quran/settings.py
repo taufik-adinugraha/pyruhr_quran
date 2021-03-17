@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'dashboard',
     'koleksi_data',
     'ayat_recog',
+	'api',
 )
 
 MIDDLEWARE = [
