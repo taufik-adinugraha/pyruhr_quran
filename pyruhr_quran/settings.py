@@ -118,3 +118,7 @@ STATICFILES_DIRS = (
 
 MEDIA_URL = '/audio/'
 MEDIA_ROOT = 'audio'
+
+AUDIO_DIR = os.path.join(BASE_DIR, MEDIA_ROOT)
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+INFO_DIR = os.path.join(BASE_DIR, 'static/info')

@@ -1,11 +1,11 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Histori Rekaman {% endblock %} 
+{% block title %} Histori Rekaman {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}{% block content %}
 
-        <div class="row" style="margin-top: -7%;">
+        <div class="row" >
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-info">
@@ -56,7 +56,7 @@
                               <a class="btn btn-success btn-sm btn-round" href="javascript:;" onclick="if(confirm('rekam ulang?')){parentNode.submit()};">
                                 <i class="material-icons">mic</i>
                               </a>
-                            </form> 
+                            </form>
                           </td>
                           <td class="text-left">
                             <form action="{% url 'delete_ayat' e.pk %}" method="post">
@@ -64,8 +64,8 @@
                               <a class="btn btn-danger btn-sm btn-round" href="javascript:;" onclick="if(confirm('hapus data audio?')){parentNode.submit()};">
                                 <i class="material-icons">delete_forever</i>
                               </a>
-                            </form> 
-                          </td>  
+                            </form>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -86,25 +86,30 @@ function play_single_sound(no_surat, no_ayat) {
   document.getElementById(no_surat+'_'+no_ayat).play();
 }
 // set surat selection
-var list_nama_surat = {{ list_nama_surat | safe }};
-var start = document.getElementById('surat_selection');
-newopt = document.createElement('option');
-newopt.value = 'surat_ayat';
-newopt.innerHTML = 'Tampilkan Semua Ayat';
-newopt.style = "font-size: 16px";
-start.appendChild(newopt);
-for ( i=0; i<114; i++ ) {
-    surat = list_nama_surat[i];
+$.getJSON("{% url 'metadata_listSurat' %}", function(data) {
+    window.list_nama_surat = data;
+    // set surat selection
+    var start = document.getElementById('surat_selection');
     newopt = document.createElement('option');
-    newopt.value = surat;
-    newopt.innerHTML = surat;
+    newopt.value = 'surat_ayat';
+    newopt.innerHTML = 'Tampilkan Semua Ayat';
     newopt.style = "font-size: 16px";
     start.appendChild(newopt);
-}
-document.getElementById('surat_selection').value = "{{ selected_surat | safe }}";
+    for ( i=1; i<=114; i++ ) {
+        surat = list_nama_surat[i];
+        newopt = document.createElement('option');
+        newopt.value = surat;
+        newopt.innerHTML = surat;
+        newopt.style = "font-size: 16px";
+        start.appendChild(newopt);
+    }
+    document.getElementById('surat_selection').value = "{{ selected_surat | safe }}";
+});
+
+
 // update table based on the selected surat
 $( "#surat_selection" ).change(function() {
-    no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
+    no_surat = document.getElementById("surat_selection").value.split('.')[0];
     window.location.href = no_surat;
 });
 </script>

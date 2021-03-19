@@ -3,15 +3,22 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from koleksi_data.models import rekaman
 from autentikasi.models import Profile
+from django.conf import settings
 import pandas as pd
 import numpy as np
+import json
 
 
 TARGET_AYAT = 10_000
 
+# white list "Kode Lembaga"
+with open(f'{settings.DATA_DIR}/white_list_lembaga.json', 'r') as f:
+    data = f.read()
+white_list_lembaga = json.loads(data)
+
 
 def home(request): 
-    return redirect('cari')
+    return redirect('login')
 
 
 @login_required(login_url="/login/")
@@ -38,10 +45,10 @@ def dashboard(request):
 		total_surat = len(df_ayat.groupby('no_surat'))
 		persen_target = round(total_ayat / TARGET_AYAT * 100, 2)
 		try:
-		    total_data = round(df_ayat['ukuran'].sum() / 1e6, 2) # GB
+		    total_data = round(df_ayat['ukuran'].sum() / 1e9, 2) # GB
 		except:
 		    total_data = 0
-		prediksi_data_target = round(df_ayat['ukuran'].mean() * TARGET_AYAT / 1e6, 2) # GB
+		prediksi_data_target = round(df_ayat['ukuran'].mean() * TARGET_AYAT / 1e9, 2) # GB
 
 		# data gender
 		gender_percent = dict(round(df_user.groupby('kelamin').size() / len(df_user), 2))
@@ -60,50 +67,48 @@ def dashboard(request):
 				'username': df_user.loc[user_id,'username'],
 				'jumlah_ayat': top5[user_id],
 				'jumlah_surat': df_ayat[df_ayat['user_id']==user_id]['no_surat'].nunique(),
-				'lembaga': df_user.loc[user_id,'lembaga'],
+				'lembaga': white_list_lembaga[df_user.loc[user_id,'kode_lembaga']],
 				}
 			data_top5.append(tmp)
 
 		# data lembaga
 		data_lembaga = []
-		group_user_lembaga = df_user.groupby('lembaga').size().sort_values(ascending=False)
+		group_user_lembaga = df_user.groupby('kode_lembaga').size().sort_values(ascending=False)
 		jumlah_kontributor_dict = dict(group_user_lembaga)
-		jumlah_ayat_dict = dict(df.groupby('lembaga').size())
-		jumlah_surat_dict = dict(df.groupby('lembaga')['no_surat'].nunique())
+		jumlah_ayat_dict = dict(df.groupby('kode_lembaga')['no_ayat'].count())
+		jumlah_surat_dict = dict(df.groupby('kode_lembaga')['no_surat'].nunique())
 		for l in group_user_lembaga.index:
 			tmp = {
-				'lembaga': l,
+				'lembaga': white_list_lembaga[l],
 				'jumlah_kontributor': jumlah_kontributor_dict[l],
 				'jumlah_ayat': jumlah_ayat_dict[l],
 				'jumlah_surat': jumlah_surat_dict[l],
 				}
 			data_lembaga.append(tmp)
 
+		# payload
+		data = {
+			# data (summary)
+			'total_user': total_user,
+			'total_ayat': total_ayat,
+			'total_surat': total_surat,
+			'total_data': total_data,
+			'persen_target': persen_target,
+			'target_ayat': TARGET_AYAT,
+			'prediksi_data_target': prediksi_data_target,
+			# data gender
+			'gender': gender_percent,
+			# data juz
+			'recorded_juz': recorded_juz,
+			# data (top5 user)
+			'top5_user': data_top5,
+			# data lembaga
+			'lembaga': data_lembaga,
+			# segment
+		    'segment': 'dashboard',
+		}  
 	except:
-		total_user, total_ayat, total_surat, total_data, persen_target, prediksi_data_target = 0, 0, 0, 0, 0, 0
-		data_top5, data_lembaga = None, None
-
-	# payload
-	data = {
-		# data (summary)
-		'total_user': total_user,
-		'total_ayat': total_ayat,
-		'total_surat': total_surat,
-		'total_data': total_data,
-		'persen_target': persen_target,
-		'target_ayat': TARGET_AYAT,
-		'prediksi_data_target': prediksi_data_target,
-		# data gender
-		'gender': gender_percent,
-		# data juz
-		'recorded_juz': recorded_juz,
-		# data (top5 user)
-		'top5_user': data_top5,
-		# data lembaga
-		'lembaga': data_lembaga,
-		# segment
-	    'segment': 'dashboard',
-	}  
+		data = {}
 
 	return render(request, 'dashboard.html', data)
 

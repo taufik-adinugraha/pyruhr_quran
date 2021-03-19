@@ -7,7 +7,7 @@
 
 {% block content %}
 
-  <div class="row" style="margin-top: -6%;">
+  <div class="row">
     <div class="col-md-5">
       <div class="card">
         <div class="card-header card-header-info">
@@ -84,33 +84,11 @@
               <div class="row">
                 <div class="col-md-12">
                   <div class="form-group">
-                    {{ form.lembaga }}
+                    {{ form.kode_lembaga }}
                   </div>
                 </div>
               </div>
-              <span class="text-danger">{{ form.lembaga.errors }}</span>
-
-              <br />
-
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    {{ form.kabupaten_kota }}
-                  </div>
-                </div>
-              </div>
-              <span class="text-danger">{{ form.kabupaten_kota.errors }}</span>
-
-              <br />
-
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    {{ form.provinsi }}
-                  </div>
-                </div>
-              </div>
-              <span class="text-danger">{{ form.provinsi.errors }}</span>
+              <span class="text-danger">{{ form.kode_lembaga.errors }}</span>
 
               <br />
 

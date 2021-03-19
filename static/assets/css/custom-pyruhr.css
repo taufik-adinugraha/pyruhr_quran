@@ -1,0 +1,32 @@
+.navbar-brand {
+  /* display: none; */
+  padding-top: 0.3125rem;
+  padding-bottom: 0.3125rem;
+  margin-right: 1rem;
+  font-size: 1.25rem;
+  line-height: inherit;
+  white-space: nowrap;
+}
+
+.navbar-brand:hover,
+.navbar-brand:focus {
+  text-decoration: none;
+}
+
+.arabic-text {
+  font-size: 35px;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.5;
+}
+
+@media (max-width: 991px) {
+  .btn-sm, .btn-group > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 2rem;
+  }
+  .arabic-text {
+    font-size: 30px;
+  }
+}

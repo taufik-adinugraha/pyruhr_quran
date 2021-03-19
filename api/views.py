@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-from koleksi_data.models import data_surat, terjemah
 from scipy.io.wavfile import read
 from deepspeech import Model
 import pandas as pd
@@ -18,19 +17,19 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-try:
-    list_nama_surat = [f'{i.id}. {i.nama_surat_indo} ({i.nama_surat_arab})' for i in data_surat.objects.all()]
-    max_ayat = [i.jumlah_ayat for i in data_surat.objects.all()]
-    arti = {f'{i.no_surat}_{i.no_ayat}':i.terjemah for i in terjemah.objects.all()}
-except:
-    pass
+from django.conf import settings
+
+
+# paths
+BASE_DIR = settings.BASE_DIR
+DATA_DIR = settings.DATA_DIR
 
 # DeepSpeech Model
-DSQ = Model('deepspeech/output_graph_imams_tusers_v2.pb')
-DSQ.enableExternalScorer('deepspeech/quran.scorer')
+DSQ = Model(f'{BASE_DIR}/deepspeech/output_graph_imams_tusers_v2.pb')
+DSQ.enableExternalScorer(f'{BASE_DIR}/deepspeech/quran.scorer')
 
 # Text Quran Utsmani
-df = pd.read_csv('data/quran_utsmani_no_basmalah.csv')
+df = pd.read_csv(f'{DATA_DIR}/quran_utsmani_no_basmalah.csv')
 quran_dict = {f'{i[0]}_{i[1]}': i[2].split(' ') for i in df.values}
 
 # search Ayat from quran_dict
@@ -93,9 +92,6 @@ class CariView(APIView):
 			resp = {
 				'result': json.dumps(result),
 				'prediction': prediction,
-				'list_nama_surat': json.dumps(list_nama_surat),
-				'arti': json.dumps(arti),
-				'segment': 'cari',
 			}
 			os.remove(filepath)
 			return Response(json.dumps(resp), status=status.HTTP_201_CREATED)

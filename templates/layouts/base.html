@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
   <!-- CSS Files -->
   <link href="/static/assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
+  <link href="/static/assets/css/custom-pyruhr.css" rel="stylesheet" />
 
 
   <!-- Specific Page CSS goes HERE  -->
@@ -51,6 +52,23 @@
       <!-- End Navbar -->
       <div class="content">
 
+
+
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+            <div class="container-fluid">
+              <div class="text-center">
+                <a>
+                  Rasulullah SAW bersabda: “Siapa yang membaca satu huruf dari Al-Quran maka baginya satu kebaikan dengan bacaan tersebut, satu kebaikan dilipatkan menjadi 10 kebaikan semisalnya dan aku tidak mengatakan <i>Alif-Laam-Miim</i> satu huruf akan tetapi <i>Alif</i> satu huruf, <i>Laam</i> satu huruf dan <i>Miim</i> satu huruf.” <br> (HR Tirmidzi, Shahih Al Jami’ No. 6469)
+                </a>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+
         <div class="container-fluid">
 
           {% block content %}{% endblock content %}
@@ -63,9 +81,9 @@
 
   {% include 'includes/scripts.html' %}
 
-  
+
   <!-- Specific Page JS goes HERE  -->
   {% block javascripts %}{% endblock javascripts %}
-  
+
 </body>
 </html>

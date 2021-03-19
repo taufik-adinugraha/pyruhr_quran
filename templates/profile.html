@@ -11,22 +11,24 @@
             <div class="col-md-8">
               <div class="card">
                 <div class="card-header card-header-info">
-                  <h3 class="card-title">Edit Data</h3>
+                  <h3 class="card-title">Profil Kontributor</h3>
                 </div>
                 <div class="card-body">
                   <form method="POST">
                     {% csrf_token %}
                     <div class="row">
-                      <div class="col-md-4">
+                      <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">Username</label>
                           <input type="text" class="form-control" name="username" value="{{ username }}">
                         </div>
                       </div>
-                      <div class="col-md-8">
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">Email</label>
-                          <input type="email" class="form-control" name="email" value="{{ email }}">
+                          <label type="text" class="form-control">{{ email }}</label>
                         </div>
                       </div>
                     </div>
@@ -65,21 +67,7 @@
                       <div class="col-md-12">
                         <div class="form-group">
                           <label class="bmd-label-floating">Lembaga</label>
-                          <input type="text" class="form-control" name="lembaga" value="{{ lembaga }}">
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label class="bmd-label-floating">Kabupaten/Kota</label>
-                          <input type="text" class="form-control" name="kabupaten_kota" value="{{ kabupaten_kota }}">
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label class="bmd-label-floating">Provinsi</label>
-                          <input type="text" class="form-control" name="provinsi" value="{{ provinsi }}">
+                          <label type="text" class="form-control">{{ kode_lembaga }}</label>
                         </div>
                       </div>
                     </div>

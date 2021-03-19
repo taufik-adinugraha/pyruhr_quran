@@ -1,14 +1,17 @@
-# -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
-
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm, SignUpForm
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+import json
 
+
+
+# white list "Kode Lembaga"
+with open(f'{settings.DATA_DIR}/white_list_lembaga.json', 'r') as f:
+    data = f.read()
+white_list_lembaga = json.loads(data)
 
 
 def login_view(request):
@@ -42,23 +45,23 @@ def register_user(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            user.refresh_from_db()
-            user.profile.kelamin = form.cleaned_data.get('kelamin')
-            user.profile.tgl_lahir = form.cleaned_data.get('tgl_lahir')
-            user.profile.lembaga = form.cleaned_data.get('lembaga')
-            user.profile.kabupaten_kota = form.cleaned_data.get('kabupaten_kota')
-            user.profile.provinsi = form.cleaned_data.get('provinsi')
-            user.save()
-            username = form.cleaned_data.get("username")
-            raw_password = form.cleaned_data.get("password1")
-            user = authenticate(username=username, password=raw_password)
+            if form.cleaned_data.get('kode_lembaga') not in white_list_lembaga:
+                msg = 'lembaga tidak terdaftar'
+            else:
+                user = form.save()
+                user.refresh_from_db()
+                user.profile.kelamin = form.cleaned_data.get('kelamin')
+                user.profile.tgl_lahir = form.cleaned_data.get('tgl_lahir')
+                user.profile.kode_lembaga = form.cleaned_data.get('kode_lembaga')
+                user.save()
+                username = form.cleaned_data.get("username")
+                raw_password = form.cleaned_data.get("password1")
+                user = authenticate(username=username, password=raw_password)
 
-            msg     = 'Akun berhasil dibuat - silakan <a href="/login">login</a>.'
-            success = True
+                msg     = 'Akun berhasil dibuat - silakan <a href="/login">login</a>.'
+                success = True
             
-            #return redirect("/login/")
-
+                #return redirect("/login/")
         else:
             msg = 'form tidak valid'    
     else:
@@ -75,9 +78,6 @@ def profile(request):
         db.username = request.POST['username']
         db.profile.kelamin = request.POST['kelamin']
         db.profile.tgl_lahir = request.POST['tgl_lahir']
-        db.profile.lembaga = request.POST['lembaga']
-        db.profile.kabupaten_kota = request.POST['kabupaten_kota']
-        db.profile.provinsi = request.POST['provinsi']
         db.save()
         db = User.objects.get(username=request.POST['username'])
     data = {
@@ -85,9 +85,7 @@ def profile(request):
         'email': db.email,
         'kelamin': db.profile.kelamin,
         'tgl_lahir': db.profile.tgl_lahir,
-        'lembaga': db.profile.lembaga,
-        'kabupaten_kota': db.profile.kabupaten_kota,
-        'provinsi': db.profile.provinsi,
+        'kode_lembaga': white_list_lembaga[db.profile.kode_lembaga],
         'segment': 'profile',
     } 
     return render(request, 'profile.html', data)

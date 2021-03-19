@@ -62,24 +62,10 @@ class SignUpForm(UserCreationForm):
     tgl_lahir = forms.DateField(
         widget=forms.SelectDateWidget(years=BIRTH_YEAR_CHOICES)
         )
-    lembaga = forms.CharField(
+    kode_lembaga = forms.CharField(
         widget=forms.TextInput(
             attrs={
-                "placeholder" : "Lembaga",                
-                "class": "form-control"
-            }
-        ))
-    kabupaten_kota = forms.CharField(
-        widget = forms.TextInput(
-            attrs={
-                "placeholder" : "Kabupaten/Kota",                
-                "class": "form-control"
-            }
-        ))
-    provinsi = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "placeholder" : "Provinsi",                
+                "placeholder" : "Kode Lembaga",                
                 "class": "form-control"
             }
         ))
@@ -100,6 +86,6 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'kelamin', 'tgl_lahir', 'lembaga', 'kabupaten_kota', 'provinsi', 'password1', 'password2')
+        fields = ('username', 'email', 'kelamin', 'tgl_lahir', 'kode_lembaga', 'password1', 'password2')
 
 

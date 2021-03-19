@@ -1,13 +1,13 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Cari Ayat {% endblock %} 
+{% block title %} Cari Ayat {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
 
-        <div class="row" style="margin-top: -7%;">
+        <div class="row" >
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-primary">
@@ -18,7 +18,7 @@
 
                     <div class="card-header">
                       <div>
-                        <div data-role="controls" style="margin-top: 0%;">
+                        <div class="d-flex align-items-center justify-content-center" data-role="controls" style="margin-top: 0%;">
                           <button id="rekam" type="button" rel="tooltip" class="btn btn-success btn-round">
                             <i id="icon-rekam" class="material-icons">mic_none</i> Rekam</button>
                         </div>
@@ -66,6 +66,10 @@
 <script src="/static/assets/js/recorder.js"></script>
 <script src="/static/assets/js/get_wav.js"></script>
 <script>
+// get required data
+$.getJSON("{% url 'metadata_listSurat' %}", function(data) {list_nama_surat = data});
+$.getJSON("{% url 'metadata_terjemah' %}", function(data) {terjemah = data});
+
 function upload(blob) {
     var data = new FormData();
     data.append('csrfmiddlewaretoken', '{{ csrf_token }}')
@@ -84,11 +88,9 @@ function upload(blob) {
         }
         document.getElementById('similar').innerHTML = "";
         // get response data
-        var result = JSON.parse(data.result);
-        var list_nama_surat = JSON.parse(data.list_nama_surat);
-        var terjemah = JSON.parse(data.arti);
-        var ayat = Object.keys(result);
-        var Nayat = Object.keys(result).length;
+        result = JSON.parse(data.result);
+        ayat = Object.keys(result);
+        Nayat = Object.keys(result).length;
         // if similar ayats are found
         document.getElementById('prediction').innerHTML = data.prediction;
         if (Nayat > 1) {
@@ -102,7 +104,7 @@ function upload(blob) {
           // info about ayat
           newdiv = document.createElement('h4');
           newdiv.style="margin-top: 5%;"
-          newdiv.innerHTML = '<strong>Q.S. ' + list_nama_surat[parseInt(no_surat)-1].split('.')[1] + ' Ayat ' + no_ayat + '</strong>';
+          newdiv.innerHTML = '<strong>Q.S. ' + list_nama_surat[no_surat].split('.')[1] + ' Ayat ' + no_ayat + '</strong>';
           newdiv.id = "add-info"
           start.appendChild(newdiv);
           // info about similarity
@@ -118,7 +120,7 @@ function upload(blob) {
           newdiv.id = "add-info"
           start.appendChild(newdiv);
           // ayat translation
-          newdiv = document.createElement('p');
+          newdiv = document.createElement('p');          
           newdiv.innerHTML = '<i>'+terjemah[no_surat + '_' + no_ayat] + '  (QS ' + no_surat + ' : ' + no_ayat + ')</i>';
           newdiv.style = "font-size: 100%; margin-right: 10%; margin-left: 5%;"
           newdiv.class = "tim-typo"
@@ -127,7 +129,6 @@ function upload(blob) {
         }
       },
     });
-} 
+}
 </script>
 {% endblock javascripts %}
-

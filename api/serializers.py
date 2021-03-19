@@ -10,4 +10,4 @@ class FileUploadSerializer(serializers.ModelSerializer):
 class CariAyatDSSerializer(serializers.ModelSerializer):
 	class Meta():
 		model = CariAyatDS
-		fields = ('file', 'remark', 'timestamp','result', 'prediction', 'list_nama_surat', 'arti', 'segment')
+		fields = ('file', 'remark', 'timestamp','result', 'prediction')

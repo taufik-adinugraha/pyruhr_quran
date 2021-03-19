@@ -1,36 +1,39 @@
-# -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
-
 from django.contrib.auth.decorators import login_required
-from rest_framework.decorators import api_view
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import rekaman, data_surat, terjemah
+from .models import rekaman
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from datetime import datetime
+from django.conf import settings
 from time import time
 import numpy as np
 import pandas as pd
 import json
 import os
 
+# paths
+INFO_DIR = settings.INFO_DIR
+DATA_DIR = settings.DATA_DIR
+AUDIO_DIR = settings.AUDIO_DIR
 
-
-try:
-    list_nama_surat = [f'{i.id}. {i.nama_surat_indo} ({i.nama_surat_arab})' for i in data_surat.objects.all()]
-    list_nama_surat_arab = [i.nama_surat_arab for i in data_surat.objects.all()]
-    max_ayat = [i.jumlah_ayat for i in data_surat.objects.all()]
-    arti = {f'{i.no_surat}_{i.no_ayat}':i.terjemah for i in terjemah.objects.all()}
-    info_juz = pd.read_csv('data/info_juz.csv')
-except:
-    pass
+# info about surat & juz
+info_juz = pd.read_csv(f'{DATA_DIR}/info_juz.csv')
+with open(f'{INFO_DIR}/list_nama_surat.json', 'r') as f:
+    data = f.read()
+list_nama_surat = {i+1:v for i,v in enumerate(json.loads(data))}
 
 
 @login_required(login_url="/login/")
 def history(request, var):
+    # read json file
+    with open(f'{INFO_DIR}/list_nama_surat_arab.json', 'r') as f:
+        data = f.read()
+    list_nama_surat_arab = json.loads(data)
+    # read json file
+    with open(f'{INFO_DIR}/max_ayat.json', 'r') as f:
+        data = f.read()
+    max_ayat = json.loads(data)
     # var: variable to sort data (ayat, ukuran, waktu)
     db = rekaman.objects.filter(user=request.user.id).order_by('no_surat', 'no_ayat')
     if var == 'ukuran':
@@ -46,28 +49,26 @@ def history(request, var):
             'no_surat': e.no_surat, 
             'no_ayat': e.no_ayat, 
             'no_surat__no_ayat': f'{e.no_surat}__{e.no_ayat}',
-            'ukuran': e.ukuran, 
+            'ukuran': e.ukuran//1000, 
             'waktu': e.waktu,
-            'filepath': f'/{e.filepath}',
+            'filepath': f'{settings.MEDIA_URL}{e.filename}',
             'nama_surat': list_nama_surat_arab[e.no_surat-1],
             'max_ayat': max_ayat[e.no_surat-1],
         }
         ndb.append(tmp)
     try:
-        total_size = round(db.aggregate(Sum('ukuran'))['ukuran__sum']/1000, 2)
+        total_size = round(db.aggregate(Sum('ukuran'))['ukuran__sum']/1e6, 2)
     except:
         total_size = 0
     data = {
         'db': ndb,
         'total_ayat': db.count(),
-        'list_nama_surat': json.dumps(list_nama_surat),
-        # 'total_surat': db.order_by().values('no_surat').distinct().count(),
         'total_ukuran': total_size,
         'segment': 'history',
     }
     # get selected surat (filter option)
     if var in np.arange(1,115).astype('str'):
-        data.update({'selected_surat': list_nama_surat[int(var)-1]})
+        data.update({'selected_surat': list_nama_surat[int(var)]})
     else:
         data.update({'selected_surat': 'surat_ayat'})
     return render(request, 'history.html', data)
@@ -78,9 +79,9 @@ def delete_ayat(request, pk):
     if request.method == 'POST':
         dat = rekaman.objects.get(pk=pk)
         u = User.objects.get(username=dat.user)
-        filePath = dat.filepath
+        filename = dat.filename
         dat.delete()
-        os.system(f'rm -f {filePath}')
+        os.remove(f'{AUDIO_DIR}/{filename}')
     return redirect('history', 'surat_ayat')
 
 
@@ -91,13 +92,9 @@ def record(request, no_surat__no_ayat):
     else:
         no_surat = int(no_surat__no_ayat.split('__')[0])
         no_ayat = int(no_surat__no_ayat.split('__')[1])
-    arti = {f'{i.no_surat}_{i.no_ayat}':i.terjemah for i in terjemah.objects.all()}
     data = {
         'no_surat': no_surat,
         'no_ayat': no_ayat,
-        'max_ayat': max_ayat,
-        'list_nama_surat': json.dumps(list_nama_surat),
-        'arti': json.dumps(arti),
         'segment': 'record',
     }     
     return render(request, 'record.html', data)
@@ -107,30 +104,29 @@ def record(request, no_surat__no_ayat):
 def upload(request):
     if request.method == 'POST':
         chars = 'abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        filePath = 'audio/' + str(time()).replace('.','')[:12] + "".join([chars[i] for j in range(8) for i in np.random.randint(0,len(chars),1)]) + '.wav'
-        with open(filePath, 'wb') as file:
+        filename = str(time()).replace('.','')[:12] + "".join([chars[i] for j in range(8) for i in np.random.randint(0,len(chars),1)]) + '.wav'
+        with open(f'{AUDIO_DIR}/{filename}', 'wb') as file:
             file.write(request.body)
         data = request.headers['info'].split('_')
         b = User.objects.get(id=request.user.id)
-        size = os.path.getsize(filePath)
+        size = os.path.getsize(f'{AUDIO_DIR}/{filename}')
         try:
             # if data for particular "surat" & "ayat" already exist
             c = b.rekaman_set.get(no_surat=data[0], no_ayat=data[1])
             # delete old wav
-            os.system(f'rm -f {c.filepath}')
+            os.remove(f'{AUDIO_DIR}/{c.filename}')
             # update values
             c.ukuran = size
-            c.filepath = filePath
+            c.filename = filename
             c.waktu = datetime.now()
             c.save()
         except:
             # new entry
             juz = info_juz[(info_juz['no_surat']==int(data[0])) & (info_juz['no_ayat']==int(data[1]))]['juz'].values[0]
-            b.rekaman_set.create(no_surat=data[0], no_ayat=data[1], juz=juz ,ukuran=size, filepath=filePath)
+            b.rekaman_set.create(no_surat=data[0], no_ayat=data[1], juz=juz ,ukuran=size, filename=filename)
         return redirect('history', 'surat_ayat')
 
 
-@api_view(['GET'])
 def metadata_rekaman(request):
     # build dataframe from database
     df_ayat = pd.DataFrame(list(rekaman.objects.all().values()))
@@ -139,6 +135,43 @@ def metadata_rekaman(request):
     # merge df_user & df_ayat
     df = df_user.merge(df_ayat.drop(['id'], axis=1), how='left', left_on='id', right_on='user_id')
     df.drop(['user_id'], axis=1, inplace=True)
+    df.replace(np.nan, '', regex=True, inplace=True)
     return JsonResponse(df.to_dict())
 
 
+def metadata_listSurat(request):
+    return JsonResponse(list_nama_surat)
+
+def metadata_listSuratArab(request):
+    # read file
+    with open(f'{INFO_DIR}/list_nama_surat_arab.json', 'r') as f:
+        data = f.read()
+    # parse file
+    obj = json.loads(data)
+    return JsonResponse({i+1:v for i,v in enumerate(obj)})
+
+def metadata_terjemah(request):
+    # read file
+    with open(f'{INFO_DIR}/terjemah.json', 'r') as f:
+        data = f.read()
+    # parse file
+    obj = json.loads(data)
+    return JsonResponse(obj)
+
+
+def metadata_maxAyat(request):
+    # read file
+    with open(f'{INFO_DIR}/max_ayat.json', 'r') as f:
+        data = f.read()
+    # parse file
+    obj = json.loads(data)
+    return JsonResponse({i+1:v for i,v in enumerate(obj)})
+
+
+def metadata_ayatQuran(request):
+    # read file
+    with open(f'{INFO_DIR}/all_ayat.json', 'r') as f:
+        data = f.read()
+    # parse file
+    obj = json.loads(data)
+    return JsonResponse(obj)

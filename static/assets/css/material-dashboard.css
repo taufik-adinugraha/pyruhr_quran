@@ -12,7 +12,7 @@
 =========================================================
 
  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.*/
- 
+
 
 /*     brand Colors              */
 
@@ -4176,7 +4176,7 @@ tbody.collapse.show {
 }
 
 .navbar-brand {
-  display: inline-block;
+  display: none;
   padding-top: 0.3125rem;
   padding-bottom: 0.3125rem;
   margin-right: 1rem;
@@ -14884,7 +14884,7 @@ fieldset[disabled] .form-group.is-focused .togglebutton label {
 }
 
 .main-panel>.content {
-  margin-top: 70px;
+  /* margin-top: 70px; */
   padding: 30px 15px;
   min-height: calc(100vh - 123px);
 }
@@ -18115,6 +18115,9 @@ Copyright (c) 2015 Daniel Eden
 /*          Changes for small display      */
 
 @media (max-width: 991px) {
+  .navbar-brand {
+    display: inline-block;
+  }
   .form-group textarea {
     padding-top: 15px;
   }
@@ -18821,5 +18824,3 @@ Copyright (c) 2015 Daniel Eden
 }
 
 /*# sourceMappingURL=dashboard-free.css.map */
-
-

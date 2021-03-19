@@ -12,9 +12,7 @@ class Profile(models.Model):
     )
     kelamin = models.CharField(max_length=1, choices=GENDER_CHOICES)
     tgl_lahir = models.DateField(null=True)
-    lembaga = models.CharField(max_length=100)
-    kabupaten_kota = models.CharField(max_length=100)
-    provinsi = models.CharField(max_length=100)
+    kode_lembaga = models.CharField(max_length=6)
 
 
 @receiver(post_save, sender=User)

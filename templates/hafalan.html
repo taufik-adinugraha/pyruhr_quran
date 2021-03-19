@@ -7,7 +7,7 @@
 
 {% block content %}
 
-        <div class="row" style="margin-top: -7%;">
+        <div class="row">
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-danger">
@@ -57,7 +57,7 @@
               <div class="card">
                 <div class="card-header">
                   <div>
-                    <button id="ulangi" type="button" rel="tooltip" class="btn btn-primary btn-round" style="margin-top: 0%; margin-bottom: 1%; margin-left: 85%; display: none;">
+                    <button id="ulangi" type="button" rel="tooltip" class="btn btn-primary btn-round" style="float: right; margin-right: 3%; display: none;">
                       <i class="material-icons">cached</i> Ulangi</button>
                   </div>
                 </div>
@@ -85,21 +85,7 @@
 <script src="/static/assets/js/recorder.js"></script>
 <script src="/static/assets/js/get_wav.js"></script>
 <script>
-// from django database
-var max_ayat = {{ max_ayat }};
-var list_nama_surat = {{ list_nama_surat | safe }};
-var quran_dict = {{ quran_dict | safe }};
-
-// set surat selection
-var start = document.getElementById('surat_selection');
-for ( i=0; i<114; i++ ) {
-    surat = list_nama_surat[i];
-    newopt = document.createElement('option');
-    newopt.value = surat;
-    newopt.innerHTML = surat;
-    newopt.style="font-size: 16px";
-    start.appendChild(newopt);
-}
+$.getJSON("{% url 'metadata_ayatQuran' %}", function(data) {window.quran_dict = data});
 // set ayat selection
 function set_start_ayat() {
     // reset DOM
@@ -108,8 +94,8 @@ function set_start_ayat() {
       element.removeChild(element.firstChild);
     };
     var start = document.getElementById('start_ayat_selection');
-    no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
-    for ( i=1; i<=max_ayat[no_surat-1]; i++ ) {
+    no_surat = parseInt(document.getElementById("surat_selection").value.split('.')[0]);
+    for ( i=1; i<=max_ayat[no_surat]; i++ ) {
         newopt = document.createElement('option');
         newopt.value = i;
         newopt.innerHTML = i;
@@ -124,9 +110,9 @@ function set_end_ayat() {
       element.removeChild(element.firstChild);
     };
     var start = document.getElementById('end_ayat_selection');
-    no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
+    no_surat = parseInt(document.getElementById("surat_selection").value.split('.')[0]);
     start_ayat = document.getElementById("start_ayat_selection").value;
-    for ( i=start_ayat; i<=max_ayat[no_surat-1]; i++ ) {
+    for ( i=start_ayat; i<=max_ayat[no_surat]; i++ ) {
         newopt = document.createElement('option');
         newopt.value = i;
         newopt.innerHTML = i;
@@ -134,23 +120,37 @@ function set_end_ayat() {
         start.appendChild(newopt);
     } 
 };
-
-// initiate default value (AlFatihah:1)
-document.getElementById("surat_selection").value = list_nama_surat[0];
-set_start_ayat();
-document.getElementById("start_ayat_selection").value = 1;
-set_end_ayat();
+// get required data and initiate state
+$.getJSON("{% url 'metadata_listSurat' %}", function(data) {
+    window.list_nama_surat = data;
+    // set surat selection
+    var start = document.getElementById('surat_selection');
+    for ( i=1; i<=114; i++ ) {
+        surat = list_nama_surat[i];
+        newopt = document.createElement('option');
+        newopt.value = surat;
+        newopt.innerHTML = surat;
+        newopt.style="font-size: 16px";
+        start.appendChild(newopt);
+    }
+    $.getJSON("{% url 'metadata_maxAyat' %}", function(data) {
+        window.max_ayat = data;
+        // initiate default value (AlFatihah:1)
+        document.getElementById("surat_selection").value = list_nama_surat[1];
+        set_start_ayat();
+        document.getElementById("start_ayat_selection").value = 1;
+        set_end_ayat();
+    });
+});
 
 // reset results
 function reset() {
-    no_surat = list_nama_surat.indexOf(document.getElementById("surat_selection").value) + 1;
-    start_ayat = document.getElementById("start_ayat_selection").value;
-    end_ayat = document.getElementById("end_ayat_selection").value;
     document.getElementsByClassName('target')[0].innerHTML = "";
     document.getElementsByClassName('target')[1].innerHTML = "";
     // show "ULANGI" button
     document.getElementById("ulangi").style.display = "none"
 }
+
 $( "#ulangi" ).click(function() {
     reset();
 });
@@ -160,7 +160,7 @@ $( "#surat_selection" ).change(function() {
     reset();
     set_start_ayat();
     set_end_ayat();
-    document.getElementById("surat_selection").value = list_nama_surat[no_surat-1];
+    document.getElementById("surat_selection").value = list_nama_surat[no_surat];
     document.getElementById("start_ayat_selection").value = 1;
     document.getElementById("end_ayat_selection").value = 1;
 });
@@ -186,15 +186,16 @@ function upload(blob) {
       processData: false,
       success: function(data) {
         var no_surat = document.getElementById("surat_selection").value.split('.')[0];
+        console.log(quran_dict)
         var start_ayat = document.getElementById("start_ayat_selection").value;
         var end_ayat = document.getElementById("end_ayat_selection").value;
 
         // highlight missing words in target ayats
         var text_target = '';
         var tmp = data.prediction;
-        var k = 1;
         for ( ayat=start_ayat; ayat<=end_ayat; ayat++ ) {
-            target = quran_dict[no_surat + '_' + ayat];
+            text_target += '(' + ayat + ')';
+            target = quran_dict[no_surat + '_' + ayat].split(' ');
             for ( i=0; i<target.length; i++ ) {
                 if (tmp.includes(target[i])) {
                     text_target += target[i] + " ";
@@ -205,8 +206,7 @@ function upload(blob) {
                     text_target += "<span style='background-color: #FFFF00;'>" + target[i] + "</span>" + " ";
                 }                
             }
-            text_target += '(' + k + ') <br> ';
-            k += 1;
+            text_target += ' <br> ';
         }
         // show results
         document.getElementsByClassName('target')[0].innerHTML = "<strong>Bacaan Seharusnya</strong> <br> (<strong><span style='background-color: #FFFF00'>kuning</span></strong> mengindikasikan kata yang tidak terbaca)";
@@ -225,4 +225,3 @@ function upload(blob) {
 // });
 </script>
 {% endblock javascripts %}
-
